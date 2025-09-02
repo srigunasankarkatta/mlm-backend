@@ -15,6 +15,7 @@ Route::get('/packages', [PackageController::class, 'index']); // list packages
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [UserController::class, 'profile']);
     Route::get('/my-tree', [UserController::class, 'tree']);
+    Route::get('/income-history', [UserController::class, 'incomeHistory']);
     Route::post('/purchase-package', [PackageController::class, 'purchase']);
     Route::post('/distribute-income/{user}', [IncomeController::class, 'distribute']);
 });

@@ -67,6 +67,56 @@ class UserController extends Controller
         ], 'User profile details fetched successfully');
     }
 
+    public function incomeHistory()
+    {
+        $user = Auth::user();
+
+        // Get all incomes for the user with pagination
+        $incomes = $user->incomes()
+            ->orderBy('created_at', 'desc')
+            ->paginate(20); // 20 records per page
+
+        // Calculate total income
+        $totalIncome = $user->incomes->sum('amount');
+
+        // Calculate income by type
+        $incomeByType = $user->incomes->groupBy('type')->map(function ($group) {
+            return [
+                'count' => $group->count(),
+                'total_amount' => number_format($group->sum('amount'), 2)
+            ];
+        });
+
+        // Format income data
+        $formattedIncomes = $incomes->map(function ($income) {
+            return [
+                'id' => $income->id,
+                'type' => $income->type,
+                'amount' => number_format($income->amount, 2),
+                'remark' => $income->remark,
+                'date' => $income->created_at->format('Y-m-d H:i:s'),
+                'formatted_date' => $income->created_at->format('M d, Y'),
+                'time' => $income->created_at->format('h:i A')
+            ];
+        });
+
+        return $this->successResponse([
+            'incomes' => $formattedIncomes,
+            'pagination' => [
+                'current_page' => $incomes->currentPage(),
+                'last_page' => $incomes->lastPage(),
+                'per_page' => $incomes->perPage(),
+                'total' => $incomes->total(),
+                'has_more_pages' => $incomes->hasMorePages()
+            ],
+            'summary' => [
+                'total_income' => number_format($totalIncome, 2),
+                'total_transactions' => $user->incomes->count(),
+                'income_by_type' => $incomeByType
+            ]
+        ], 'Income history fetched successfully');
+    }
+
     public function tree()
     {
         $user = Auth::user();
