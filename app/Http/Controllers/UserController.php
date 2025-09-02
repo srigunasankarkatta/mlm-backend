@@ -26,6 +26,7 @@ class UserController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'referralCode' => $user->referral_code, // Using user ID as referral code
             'package' => $user->package ? [
                 'id' => $user->package->id,
                 'name' => $user->package->name,

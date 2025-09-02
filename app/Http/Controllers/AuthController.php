@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponseTrait;
 
+
 class AuthController extends Controller
 {
     use ApiResponseTrait;
@@ -49,29 +50,43 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name'       => 'required|string|max:255',
-            'email'      => 'required|string|email|unique:users',
-            'password'   => 'required|string|min:6',
-            'sponsor_id' => 'required|exists:users,id',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|string|email|unique:users',
+            'password'    => 'required|string|min:6',
+            'referral_code' => 'required|exists:users,referral_code'
         ]);
 
-        // Check sponsor capacity (max 4 directs)
-        $sponsor = User::find($request->sponsor_id);
+        $sponsor = User::where('referral_code', $request->referral_code)->first();
+
+        // Check sponsor directs limit
         if ($sponsor->directs()->count() >= 4) {
-            return $this->errorResponse('This sponsor already has 4 direct members. Please use another sponsor ID.', 422);
+            return $this->errorResponse('This referral code already has 4 directs.', 422);
         }
 
-        // Create new user
+        // Check sponsor has package
+        if (!$sponsor->package_id) {
+            return $this->errorResponse(
+                'This sponsor has not purchased any package. You cannot register under this referral code.',
+                422
+            );
+        }
+
+        // Create user
         $user = User::create([
             'name'       => $request->name,
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
-            'sponsor_id' => $request->sponsor_id,
-            'package_id' => $request->package_id,
+            'sponsor_id' => $sponsor->id,
         ]);
-
         $user->assignRole('customer');
 
-        return $this->successResponse($user, 'User registered successfully');
+        // Generate Sanctum token
+        $token = $user->createToken('auth')->plainTextToken;
+
+        // Return using trait
+        return $this->successResponse(
+            ['token' => $token, 'user' => $user],
+            'User registered successfully'
+        );
     }
 }
