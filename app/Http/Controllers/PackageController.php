@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Package;
+use App\Models\Transaction;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class PackageController extends Controller
 {
@@ -30,9 +32,11 @@ class PackageController extends Controller
     {
         $request->validate([
             'package_id' => 'required|exists:packages,id',
+            'payment_method' => 'nullable|in:cash,bank_transfer,credit_card,digital_wallet',
+            'description' => 'nullable|string|max:500',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
         $package = Package::findOrFail($request->package_id);
 
         // Prevent duplicate purchase
@@ -47,6 +51,24 @@ class PackageController extends Controller
             }
         }
 
+        // Create transaction record
+        $transaction = Transaction::create([
+            'user_id' => $user->id,
+            'package_id' => $package->id,
+            'amount' => $package->price,
+            'type' => Transaction::TYPE_PURCHASE,
+            'status' => Transaction::STATUS_COMPLETED,
+            'payment_method' => $request->payment_method ?? Transaction::PAYMENT_CASH,
+            'transaction_id' => 'TXN-' . strtoupper(Str::random(10)),
+            'description' => $request->description ?? "Package purchase: {$package->name}",
+            'metadata' => [
+                'package_name' => $package->name,
+                'level_unlock' => $package->level_unlock,
+                'previous_package_id' => $user->package_id,
+                'purchase_date' => now()->toISOString(),
+            ]
+        ]);
+
         // Assign package to user
         $user->package_id = $package->id;
         $user->save();
@@ -56,6 +78,14 @@ class PackageController extends Controller
 
         return $this->successResponse([
             'user_id' => $user->id,
+            'transaction' => [
+                'id' => $transaction->id,
+                'transaction_id' => $transaction->transaction_id,
+                'amount' => $transaction->amount,
+                'status' => $transaction->status,
+                'payment_method' => $transaction->payment_method,
+                'created_at' => $transaction->created_at,
+            ],
             'package' => [
                 'id' => $package->id,
                 'name' => $package->name,

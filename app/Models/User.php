@@ -33,6 +33,11 @@ class User extends Authenticatable
         return $this->hasMany(Income::class);
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
     protected static function booted()
     {
         static::created(function ($user) {
