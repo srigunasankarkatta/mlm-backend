@@ -38,6 +38,31 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class);
     }
 
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class);
+    }
+
+    public function walletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    public function withdrawals()
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
+    public function earningWallet()
+    {
+        return $this->hasOne(Wallet::class)->where('type', Wallet::TYPE_EARNING);
+    }
+
+    public function bonusWallet()
+    {
+        return $this->hasOne(Wallet::class)->where('type', Wallet::TYPE_BONUS);
+    }
+
     protected static function booted()
     {
         static::created(function ($user) {
