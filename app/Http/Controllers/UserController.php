@@ -19,7 +19,7 @@ class UserController extends Controller
         ]);
 
         // Calculate total income
-        $totalIncome = $user->incomes->sum('amount');
+        $totalIncome = $user->incomes()->sum('amount');
 
         // Format user data
         $userData = [
@@ -50,7 +50,7 @@ class UserController extends Controller
         });
 
         // Format incomes data
-        $incomesData = $user->incomes->map(function ($income) {
+        $incomesData = $user->incomes()->get()->map(function ($income) {
             return [
                 'type' => $income->type,
                 'amount' => number_format($income->amount, 2),
@@ -77,10 +77,10 @@ class UserController extends Controller
             ->paginate(20); // 20 records per page
 
         // Calculate total income
-        $totalIncome = $user->incomes->sum('amount');
+        $totalIncome = $user->incomes()->sum('amount');
 
         // Calculate income by type
-        $incomeByType = $user->incomes->groupBy('type')->map(function ($group) {
+        $incomeByType = $user->incomes()->get()->groupBy('type')->map(function ($group) {
             return [
                 'count' => $group->count(),
                 'total_amount' => number_format($group->sum('amount'), 2)
@@ -111,7 +111,7 @@ class UserController extends Controller
             ],
             'summary' => [
                 'total_income' => number_format($totalIncome, 2),
-                'total_transactions' => $user->incomes->count(),
+                'total_transactions' => $user->incomes()->count(),
                 'income_by_type' => $incomeByType
             ]
         ], 'Income history fetched successfully');

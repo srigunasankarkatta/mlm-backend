@@ -372,7 +372,7 @@ class AdminWalletService
                     'price' => $user->package->price
                 ] : null
             ],
-            'wallets' => $user->wallets->map(function ($wallet) {
+            'wallets' => $user->wallets()->get()->map(function ($wallet) {
                 return $this->formatWalletForAdmin($wallet);
             }),
             'recent_transactions' => $user->walletTransactions->map(function ($transaction) {
@@ -382,11 +382,11 @@ class AdminWalletService
                 return $this->formatWithdrawalForAdmin($withdrawal);
             }),
             'summary' => [
-                'total_balance' => $user->wallets->sum('balance'),
-                'total_pending' => $user->wallets->sum('pending_balance'),
-                'total_withdrawn' => $user->wallets->sum('withdrawn_balance'),
-                'total_transactions' => $user->walletTransactions->count(),
-                'total_withdrawals' => $user->withdrawals->count()
+                'total_balance' => $user->wallets()->sum('balance'),
+                'total_pending' => $user->wallets()->sum('pending_balance'),
+                'total_withdrawn' => $user->wallets()->sum('withdrawn_balance'),
+                'total_transactions' => $user->walletTransactions()->count(),
+                'total_withdrawals' => $user->withdrawals()->count()
             ]
         ];
     }
@@ -512,4 +512,3 @@ class AdminWalletService
         };
     }
 }
-
