@@ -10,6 +10,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\Customer\CustomerWalletController;
 use App\Http\Controllers\Admin\AdminWalletController;
+use App\Http\Controllers\AutoPoolController;
+use App\Http\Controllers\Customer\CustomerAutoPoolController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
@@ -45,6 +47,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/withdrawals', [CustomerWalletController::class, 'getWithdrawals']);
         Route::get('/withdrawals/{id}', [CustomerWalletController::class, 'getWithdrawal']);
         Route::get('/withdrawal-limits', [CustomerWalletController::class, 'getWithdrawalLimits']);
+    });
+
+    // Customer Auto Pool routes
+    Route::prefix('auto-pool')->group(function () {
+        Route::get('/status', [CustomerAutoPoolController::class, 'getStatus']);
+        Route::get('/completions', [CustomerAutoPoolController::class, 'getCompletions']);
+        Route::get('/bonuses', [CustomerAutoPoolController::class, 'getBonuses']);
+        Route::get('/levels', [CustomerAutoPoolController::class, 'getLevels']);
+        Route::get('/dashboard', [CustomerAutoPoolController::class, 'getDashboard']);
+        Route::post('/process', [CustomerAutoPoolController::class, 'processCompletions']);
     });
 });
 
@@ -94,5 +106,16 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
         Route::get('/{id}', [AdminWalletController::class, 'getWithdrawal']);
         Route::put('/{id}/process', [AdminWalletController::class, 'processWithdrawal']);
         Route::get('/export/csv', [AdminWalletController::class, 'exportWithdrawals']);
+    });
+
+    // Auto Pool management
+    Route::prefix('auto-pool')->group(function () {
+        Route::get('/statistics', [AutoPoolController::class, 'getStatistics']);
+        Route::get('/completions', [AutoPoolController::class, 'getCompletions']);
+        Route::get('/bonuses', [AutoPoolController::class, 'getBonuses']);
+        Route::get('/levels', [AutoPoolController::class, 'getLevels']);
+        Route::post('/process-all', [AutoPoolController::class, 'processAllCompletions']);
+        Route::post('/process-user/{userId}', [AutoPoolController::class, 'processUserCompletions']);
+        Route::get('/user/{userId}/status', [AutoPoolController::class, 'getUserStatus']);
     });
 });

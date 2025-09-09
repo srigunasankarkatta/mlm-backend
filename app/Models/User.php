@@ -11,7 +11,19 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasRoles, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'sponsor_id', 'package_id', 'referral_code'];
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'sponsor_id',
+        'package_id',
+        'referral_code',
+        'auto_pool_level',
+        'group_completion_count',
+        'last_group_completion_at',
+        'total_auto_pool_earnings',
+        'auto_pool_stats'
+    ];
 
     public function sponsor()
     {
@@ -61,6 +73,17 @@ class User extends Authenticatable
     public function bonusWallet()
     {
         return $this->hasOne(Wallet::class)->where('type', Wallet::TYPE_BONUS);
+    }
+
+    // Auto Pool relationships
+    public function groupCompletions()
+    {
+        return $this->hasMany(GroupCompletion::class);
+    }
+
+    public function autoPoolBonuses()
+    {
+        return $this->hasMany(AutoPoolBonus::class);
     }
 
     protected static function booted()

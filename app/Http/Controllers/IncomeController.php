@@ -5,14 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Income;
 use App\Services\WalletService;
+use App\Services\AutoPool\AutoPoolService;
 
 class IncomeController extends Controller
 {
     protected $walletService;
+    protected $autoPoolService;
 
-    public function __construct(WalletService $walletService)
+    public function __construct(WalletService $walletService, AutoPoolService $autoPoolService)
     {
         $this->walletService = $walletService;
+        $this->autoPoolService = $autoPoolService;
     }
 
     public function distribute(User $newUser)
@@ -128,6 +131,29 @@ class IncomeController extends Controller
                 );
             }
             $upline = $upline->sponsor;
+        }
+
+        // Process Auto Pool completions for the new user
+        $this->processAutoPoolCompletions($newUser);
+    }
+
+    /**
+     * Process Auto Pool completions for a user
+     */
+    private function processAutoPoolCompletions(User $user)
+    {
+        try {
+            $results = $this->autoPoolService->processAutoPoolCompletions($user);
+
+            // Log Auto Pool completions if any
+            if (!empty($results)) {
+                \Log::info("Auto Pool completions processed for user {$user->id}", [
+                    'user_id' => $user->id,
+                    'completions' => $results
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error("Error processing Auto Pool completions for user {$user->id}: " . $e->getMessage());
         }
     }
 }
