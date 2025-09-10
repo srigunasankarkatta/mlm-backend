@@ -59,6 +59,29 @@ class PackageController extends Controller
             }
         }
 
+        // ✅ Check if user has minimum 4 directs before purchasing Package-2+
+        if ($package->level_unlock >= 2) {
+            $directsCount = $user->directs()->count();
+            if ($directsCount < 4) {
+                return $this->errorResponse("You must have at least 4 directs before purchasing {$package->name}. You currently have {$directsCount} directs.", 422);
+            }
+        }
+
+        // ✅ Check if all directs have the required package level
+        if ($package->level_unlock >= 2) {
+            $requiredDirectPackage = Package::where('level_unlock', $package->level_unlock - 1)->first();
+            $directsWithoutPackage = $user->directs()
+                ->whereDoesntHave('package', function ($query) use ($requiredDirectPackage) {
+                    $query->where('level_unlock', $requiredDirectPackage->level_unlock);
+                })
+                ->get();
+
+            if ($directsWithoutPackage->count() > 0) {
+                $directNames = $directsWithoutPackage->pluck('name')->join(', ');
+                return $this->errorResponse("All your directs must have {$requiredDirectPackage->name} before you can purchase {$package->name}. Missing: {$directNames}", 422);
+            }
+        }
+
         // Create transaction record
         $transaction = Transaction::create([
             'user_id' => $user->id,

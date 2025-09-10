@@ -58,6 +58,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [CustomerAutoPoolController::class, 'getDashboard']);
         Route::post('/process', [CustomerAutoPoolController::class, 'processCompletions']);
     });
+
+    // Top Earners routes
+    Route::prefix('top-earners')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Customer\TopEarnersController::class, 'getTopEarners']);
+        Route::get('/stats', [\App\Http\Controllers\Customer\TopEarnersController::class, 'getLeaderboardStats']);
+        Route::get('/my-rank', [\App\Http\Controllers\Customer\TopEarnersController::class, 'getUserRank']);
+    });
 });
 
 // Admin routes with prefix
