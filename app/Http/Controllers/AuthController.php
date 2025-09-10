@@ -53,22 +53,31 @@ class AuthController extends Controller
             'name'        => 'required|string|max:255',
             'email'       => 'required|string|email|unique:users',
             'password'    => 'required|string|min:6',
-            'referral_code' => 'required|exists:users,referral_code'
+            'referral_code' => 'nullable|exists:users,referral_code'
         ]);
 
-        $sponsor = User::where('referral_code', $request->referral_code)->first();
+        $sponsor = null;
 
-        // Check sponsor directs limit
-        if ($sponsor->directs()->count() >= 4) {
-            return $this->errorResponse('This referral code already has 4 directs.', 422);
-        }
+        // If referral code is provided, validate sponsor
+        if ($request->referral_code) {
+            $sponsor = User::where('referral_code', $request->referral_code)->first();
 
-        // Check sponsor has package
-        if (!$sponsor->package_id) {
-            return $this->errorResponse(
-                'This sponsor has not purchased any package. You cannot register under this referral code.',
-                422
-            );
+            if (!$sponsor) {
+                return $this->errorResponse('The selected referral code is invalid.', 422);
+            }
+
+            // Check sponsor directs limit
+            if ($sponsor->directs()->count() >= 4) {
+                return $this->errorResponse('This referral code already has 4 directs.', 422);
+            }
+
+            // Check sponsor has package
+            if (!$sponsor->package_id) {
+                return $this->errorResponse(
+                    'This sponsor has not purchased any package. You cannot register under this referral code.',
+                    422
+                );
+            }
         }
 
         // Create user
@@ -76,7 +85,7 @@ class AuthController extends Controller
             'name'       => $request->name,
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
-            'sponsor_id' => $sponsor->id,
+            'sponsor_id' => $sponsor ? $sponsor->id : null,
         ]);
         $user->assignRole('customer');
 

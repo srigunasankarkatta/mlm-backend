@@ -108,6 +108,16 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
         Route::get('/export/csv', [AdminWalletController::class, 'exportWithdrawals']);
     });
 
+    // User management
+    Route::prefix('users')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\UserController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Admin\UserController::class, 'store']);
+        Route::get('/{id}', [\App\Http\Controllers\Admin\UserController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\Admin\UserController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy']);
+        Route::get('/{id}/transactions', [\App\Http\Controllers\Admin\UserController::class, 'transactions']);
+    });
+
     // Auto Pool management
     Route::prefix('auto-pool')->group(function () {
         Route::get('/statistics', [AutoPoolController::class, 'getStatistics']);

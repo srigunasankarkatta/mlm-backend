@@ -44,10 +44,18 @@ class PackageController extends Controller
             return $this->errorResponse('You already own this package.', 422);
         }
 
-        // ✅ Enforce sequential plan purchase
-        if ($package->id > 1) {
-            if ($user->package_id !== ($package->id - 1)) {
-                return $this->errorResponse("You must purchase Package-" . ($package->id - 1) . " before upgrading to this plan.", 422);
+        // ✅ Enforce sequential plan purchase based on level_unlock
+        if ($package->level_unlock > 1) {
+            $requiredLevel = $package->level_unlock - 1;
+            $requiredPackage = Package::where('level_unlock', $requiredLevel)->first();
+
+            if (!$user->package_id) {
+                return $this->errorResponse("You must purchase {$requiredPackage->name} before upgrading to this plan.", 422);
+            }
+
+            $userPackage = Package::find($user->package_id);
+            if (!$userPackage || $userPackage->level_unlock !== $requiredLevel) {
+                return $this->errorResponse("You must purchase {$requiredPackage->name} before upgrading to this plan.", 422);
             }
         }
 
